@@ -168,10 +168,9 @@
   .const-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
   .const-name { font-size: 10px; color: rgba(255,255,255,0.5); }
 
-  /* 星座介绍卡片 - 左下角 */
   #const-card {
     position: fixed; z-index: 150;
-    left: 70px; bottom: 70px;
+    left: 20px; bottom: 110px;
     width: 280px; max-height: 300px;
     border-radius: 18px; padding: 18px;
     pointer-events: auto;
@@ -199,9 +198,8 @@
   #const-card-divider { height: 1px; background: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); margin: 0 0 12px 0; }
   #const-card-desc { font-size: 12px; line-height: 1.8; color: rgba(255,255,255,0.55); white-space: pre-wrap; }
 
-  /* 星座小地图 - 左上角 */
   #minimap-wrap {
-    position: fixed; top: 20px; left: 20px; z-index: 50;
+    position: fixed; top: 50px; left: 20px; z-index: 50;
     opacity: 0; transition: opacity 0.4s;
     pointer-events: none;
   }
@@ -263,7 +261,6 @@
     if (!document.getElementById('loading') || document.getElementById('loading').style.display === 'none') return;
     requestAnimationFrame(draw);
     ctx.clearRect(0, 0, W, H);
-    // ... loading animation kept intact
     particles.forEach(p => {
       p.phase += (1 / 60) * p.speed / CYCLE;
       if (p.phase > 1) { resetParticle(p, false); p.phase = 0; }
@@ -454,7 +451,6 @@ function makeStarTexture() {
 }
 const starTex = makeStarTexture();
 
-// Background stars
 {
   const count = 3500;
   const pos = new Float32Array(count * 3);
@@ -637,7 +633,7 @@ function buildGraph(data) {
       });
     } else {
       nodes.forEach(n => {
-        if (frozenNodes.has(n.id)) return; // 冻结的星星不旋转
+        if (frozenNodes.has(n.id)) return;
         _v.set(n.x, n.y, n.z);
         _q.setFromAxisAngle(n._orbitAxis, n._orbitSpeed);
         _v.applyQuaternion(_q);
@@ -685,7 +681,6 @@ function buildGraph(data) {
       e.mat.opacity = 0.35 * Math.min(1, t * 2);
       e.line.visible = true;
     });
-    // 更新小地图
     updateMinimap();
   }
   const linkedMeshes = new Set();
@@ -735,7 +730,6 @@ function buildGraph(data) {
   };
 }
 
-// ── 小地图 ──
 const minimapCanvas = document.getElementById('minimap');
 const minimapCtx = minimapCanvas.getContext('2d');
 const minimapWrap = document.getElementById('minimap-wrap');
@@ -745,11 +739,8 @@ function updateMinimap() {
   if (!activeConst) return;
   const cl = constLines.find(c => c.id === activeConst);
   if (!cl || !cl.starNodes.length) return;
-
   const mw = 160, mh = 160;
   minimapCtx.clearRect(0, 0, mw, mh);
-
-  // 计算边界
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   cl.starNodes.forEach(n => {
     if (n.x < minX) minX = n.x;
@@ -761,15 +752,9 @@ function updateMinimap() {
   const rangeY = maxY - minY || 1;
   const pad = 20;
   const scale = Math.min((mw - pad * 2) / rangeX, (mh - pad * 2) / rangeY);
-
   function project(n) {
-    return {
-      x: pad + (n.x - minX) * scale,
-      y: mh - pad - (n.y - minY) * scale
-    };
+    return { x: pad + (n.x - minX) * scale, y: mh - pad - (n.y - minY) * scale };
   }
-
-  // 画连线
   minimapCtx.strokeStyle = cl.origColor || '#ffd700';
   minimapCtx.lineWidth = 1.5;
   minimapCtx.globalAlpha = 0.6;
@@ -780,8 +765,6 @@ function updateMinimap() {
     else minimapCtx.lineTo(p.x, p.y);
   }
   minimapCtx.stroke();
-
-  // 画星点
   cl.starNodes.forEach(n => {
     const p = project(n);
     minimapCtx.globalAlpha = 0.9;
@@ -801,7 +784,6 @@ function updateMinimap() {
   });
 }
 
-// ── 星座控制 ──
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2(-9999, -9999);
 const tooltip = document.getElementById('tooltip');
@@ -928,7 +910,7 @@ function showConstellation(constData) {
       bright.multiplyScalar(1.2);
       n._mesh.material.color.copy(bright);
     }
-    frozenNodes.add(n.id); // 冻结星星，形状固定
+    frozenNodes.add(n.id);
   });
   activeConst = constData.id;
   document.querySelectorAll('.const-row').forEach(el => {
@@ -940,8 +922,6 @@ function showConstellation(constData) {
   constCardStars.textContent = starNames;
   constCardDesc.textContent = constData.description;
   constCard.classList.add('open');
-
-  // 显示小地图
   minimapLabel.textContent = constData.name + ' · 星图';
   minimapWrap.classList.add('show');
   updateMinimap();
@@ -961,7 +941,6 @@ document.getElementById('const-list').addEventListener('click', e => {
   showConstellation(constData);
 });
 
-// ── Main ──
 async function main() {
   try {
     const res = await fetch(API_NODES);
