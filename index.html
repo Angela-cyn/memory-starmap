@@ -180,7 +180,7 @@
 
 <div id="loading">
   <canvas id="loading-canvas"></canvas>
-  <p>Rendering starmap…</p>
+  <p>星图生成中…</p>
 </div>
 
 <script>
@@ -322,19 +322,19 @@
 </div>
 
 <div id="controls">
-  <button class="ctrl-btn" id="btn-reset" title="Reset view">&#x2316;</button>
+  <button class="ctrl-btn" id="btn-reset" title="重置视角">&#x2316;</button>
 </div>
 
 <div id="legend">
-  <div class="legend-row"><div class="legend-dot" style="background:#ff9060"></div> feel</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#60c8ff"></div> diary</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#b07aff"></div> permanent</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#7aabff"></div> dynamic</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#66dd88"></div> season</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#ffd700"></div> anchor</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#ff66aa"></div> milestone</div>
-  <div class="legend-row"><div class="legend-dot" style="background:#ffd97a"></div> pinned</div>
-  <div class="legend-hint">Size = importance<br>Drag to rotate · Scroll to zoom · Click to inspect</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#ff9060"></div> 情绪</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#60c8ff"></div> 日记</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#b07aff"></div> 永恒</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#7aabff"></div> 动态</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#66dd88"></div> 季节</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#ffd700"></div> 锚点</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#ff66aa"></div> 里程碑</div>
+  <div class="legend-row"><div class="legend-dot" style="background:#ffd97a"></div> 置顶</div>
+  <div class="legend-hint">大小 = 重要度<br>拖动旋转 · 滚轮缩放 · 点击查看</div>
 </div>
 <script type="importmap">
 {
@@ -661,6 +661,11 @@ function positionCard(mesh) {
   card.style.top = sy + 'px';
 }
 
+const typeNames = {
+  feel: '情绪', diary: '日记', permanent: '永恒',
+  dynamic: '动态', season: '季节', anchor: '锚点', milestone: '里程碑'
+};
+
 window.addEventListener('click', async e => {
   if (card.contains(e.target)) return;
   raycaster.setFromCamera(mouse, camera);
@@ -685,16 +690,16 @@ window.addEventListener('click', async e => {
   selected.scale.setScalar(selected.userData.baseScale * 1.7);
   showEdgesFor(d.id);
   document.getElementById('card-name').textContent = d.name;
-  const typeLabel = { feel: 'feel', diary: 'diary', permanent: 'permanent', dynamic: 'dynamic', season: 'season', anchor: 'anchor', milestone: 'milestone' }[d.type] ?? d.type;
-  let metaText = typeLabel + ' · importance ' + (d.importance ?? '—');
-  if (d.score !== undefined) metaText += ' · score ' + Number(d.score).toFixed(1);
+  const typeName = typeNames[d.type] ?? d.type;
+  let metaText = typeName + ' · 重要度 ' + (d.importance ?? '—');
+  if (d.score !== undefined) metaText += ' · 分值 ' + Number(d.score).toFixed(1);
   if (d.heartbeat) metaText += ' · ♥ ' + d.heartbeat + '/10';
   document.getElementById('card-meta').textContent = metaText;
   const tagsEl = document.getElementById('card-tags');
   tagsEl.innerHTML = '';
-  if (d.pinned) tagsEl.innerHTML += '<span class="tag pinned">pinned</span>';
-  if (d.resolved) tagsEl.innerHTML += '<span class="tag resolved">resolved</span>';
-  if (d.type) tagsEl.innerHTML += '<span class="tag ' + d.type + '">' + d.type + '</span>';
+  if (d.pinned) tagsEl.innerHTML += '<span class="tag pinned">置顶</span>';
+  if (d.resolved) tagsEl.innerHTML += '<span class="tag resolved">已存档</span>';
+  if (d.type) tagsEl.innerHTML += '<span class="tag ' + d.type + '">' + typeName + '</span>';
   let contentText = '';
   if (d.quote) contentText += '「' + d.quote + '」';
   document.getElementById('card-content').textContent = contentText;
@@ -722,7 +727,7 @@ let tickFn = null;
 async function main() {
   try {
     const res = await fetch(API_NODES);
-    if (!res.ok) throw new Error('Failed to load data: ' + res.status);
+    if (!res.ok) throw new Error('加载失败: ' + res.status);
     const data = await res.json();
     const g = buildGraph(data);
     allMeshes = g.meshes;
@@ -736,7 +741,7 @@ async function main() {
     loadEl.style.opacity = '0';
     setTimeout(() => { loadEl.style.display = 'none'; }, 600);
   } catch (err) {
-    document.getElementById('error-text').textContent = 'Error: ' + err.message;
+    document.getElementById('error-text').textContent = '出错啦: ' + err.message;
     document.getElementById('error-msg').style.display = 'flex';
     const loadEl = document.getElementById('loading');
     loadEl.style.transition = 'opacity 0.6s ease';
